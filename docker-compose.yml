@@ -1,0 +1,191 @@
+services:
+  # ==========================================
+  # DATABASES
+  # ==========================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: shopmate-postgres
+    environment:
+      POSTGRES_USER: shopmate_user
+      POSTGRES_PASSWORD: shopmate_password
+      POSTGRES_DB: shopmate_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - shopmate-net
+
+  mongo:
+    image: mongo:6.0
+    container_name: shopmate-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - shopmate-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: shopmate-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - shopmate-net
+
+  # ==========================================
+  # MICROSERVICES
+  # ==========================================
+  api-gateway:
+    build: ./services/api-gateway
+    container_name: shopmate-gateway
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - AUTH_SERVICE_URL=http://auth-service:8001
+      - PRODUCT_SERVICE_URL=http://product-service:8003
+      - CART_SERVICE_URL=http://cart-service:8005
+      - ORDER_SERVICE_URL=http://order-service:8006
+      - PAYMENT_SERVICE_URL=http://payment-service:8007
+    depends_on:
+      - auth-service
+      - product-service
+    networks:
+      - shopmate-net
+
+  auth-service:
+    build: ./services/auth-service
+    container_name: shopmate-auth
+    ports:
+      - "8001:8001"
+    environment:
+      - PORT=8001
+      - DB_HOST=postgres
+      - DB_USER=shopmate_user
+      - DB_PASSWORD=shopmate_password
+      - DB_NAME=shopmate_db
+      - JWT_SECRET=super_secret_key_change_me_in_prod
+    depends_on:
+      - postgres
+    networks:
+      - shopmate-net
+
+  product-service:
+    build: ./services/product-service
+    container_name: shopmate-product
+    ports:
+      - "8003:8003"
+    environment:
+      - PORT=8003
+      - MONGO_URI=mongodb://mongo:27017/shopmate_products
+    depends_on:
+      - mongo
+    networks:
+      - shopmate-net
+
+  cart-service:
+    build: ./services/cart-service
+    container_name: shopmate-cart
+    ports:
+      - "8005:8005"
+    environment:
+      - PORT=8005
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+    networks:
+      - shopmate-net
+
+  order-service:
+    build: ./services/order-service
+    container_name: shopmate-order
+    ports:
+      - "8006:8006"
+    environment:
+      - PORT=8006
+      - DB_HOST=postgres
+      - DB_USER=shopmate_user
+      - DB_PASSWORD=shopmate_password
+      - DB_NAME=shopmate_db
+    depends_on:
+      - postgres
+    networks:
+      - shopmate-net
+
+  payment-service:
+    build: ./services/payment-service
+    container_name: shopmate-payment
+    ports:
+      - "8007:8007"
+    environment:
+      - PORT=8007
+      - DB_HOST=postgres
+      - DB_USER=shopmate_user
+      - DB_PASSWORD=shopmate_password
+      - DB_NAME=shopmate_db
+    depends_on:
+      - postgres
+    networks:
+      - shopmate-net
+
+  user-service:
+    build: ./services/user-service
+    container_name: shopmate-user
+    ports:
+      - "8002:8002"
+    environment:
+      - PORT=8002
+      - DB_HOST=postgres
+      - DB_USER=shopmate_user
+      - DB_PASSWORD=shopmate_password
+      - DB_NAME=shopmate_db
+    depends_on:
+      - postgres
+    networks:
+      - shopmate-net
+
+  search-service:
+    build: ./services/search-service
+    container_name: shopmate-search
+    ports:
+      - "8004:8004"
+    environment:
+      - PORT=8004
+      - MONGO_URI=mongodb://mongo:27017/shopmate_products
+    depends_on:
+      - mongo
+    networks:
+      - shopmate-net
+
+  notification-service:
+    build: ./services/notification-service
+    container_name: shopmate-notification
+    ports:
+      - "8008:8008"
+    environment:
+      - PORT=8008
+    networks:
+      - shopmate-net
+
+  frontend:
+    build: ./frontend
+    container_name: shopmate-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_GATEWAY_URL=http://localhost:8000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - shopmate-net
+
+volumes:
+  postgres_data:
+  mongo_data:
+
+networks:
+  shopmate-net:
+    driver: bridge

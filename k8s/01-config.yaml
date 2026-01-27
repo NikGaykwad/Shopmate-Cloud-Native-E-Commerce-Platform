@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: shopmate-config
+  namespace: default
+data:
+  DB_HOST: "postgres"
+  DB_PORT: "5432"
+  DB_USER: "shopmate_user"
+  DB_NAME: "shopmate_db"
+  MONGO_URI: "mongodb://mongo:27017/shopmate_products"
+  REDIS_URL: "redis://redis:6379"
+  # Service URLs (internal dns)
+  AUTH_SERVICE_URL: "http://auth-service:8001"
+  PRODUCT_SERVICE_URL: "http://product-service:8003"
+  CART_SERVICE_URL: "http://cart-service:8005"
+  ORDER_SERVICE_URL: "http://order-service:8006"
+  PAYMENT_SERVICE_URL: "http://payment-service:8007"
+  VITE_API_GATEWAY_URL: "http://api-gateway:8000"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: shopmate-secrets
+  namespace: default
+type: Opaque
+stringData:
+  DB_PASSWORD: "shopmate_password"
+  JWT_SECRET: "super_secret_key_change_me_in_prod"
