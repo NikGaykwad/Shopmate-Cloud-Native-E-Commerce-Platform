@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shopmate-payment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shopmate-payment
+  template:
+    metadata:
+      labels:
+        app: shopmate-payment
+    spec:
+      containers:
+        - name: payment-service
+          image: shopmate-payment:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8007
+          env:
+            - name: PORT
+              value: "8007"
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: shopmate-config
+                  key: DB_HOST
+            - name: DB_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: shopmate-config
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: shopmate-secrets
+                  key: DB_PASSWORD
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: shopmate-config
+                  key: DB_NAME
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shopmate-payment
+spec:
+  ports:
+    - port: 8007
+      targetPort: 8007
+  selector:
+    app: shopmate-payment

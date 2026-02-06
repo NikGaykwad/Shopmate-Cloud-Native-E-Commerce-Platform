@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shopmate-cart
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shopmate-cart
+  template:
+    metadata:
+      labels:
+        app: shopmate-cart
+    spec:
+      containers:
+        - name: cart-service
+          image: shopmate-cart:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8005
+          env:
+            - name: PORT
+              value: "8005"
+            - name: REDIS_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: shopmate-config
+                  key: REDIS_URL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shopmate-cart
+spec:
+  ports:
+    - port: 8005
+      targetPort: 8005
+  selector:
+    app: shopmate-cart

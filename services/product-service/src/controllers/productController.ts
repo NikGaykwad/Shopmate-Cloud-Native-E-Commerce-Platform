@@ -12,7 +12,7 @@ export const getProducts = async (req: Request, res: Response) => {
             filter.category = query.category;
         }
 
-        const products = await Product.find(filter);
+        const products = await Product.find(filter).sort({ createdAt: -1 });
         res.json(products);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching products' });

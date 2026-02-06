@@ -49,6 +49,7 @@ services:
       - CART_SERVICE_URL=http://cart-service:8005
       - ORDER_SERVICE_URL=http://order-service:8006
       - PAYMENT_SERVICE_URL=http://payment-service:8007
+      - SEARCH_SERVICE_URL=http://search-service:8004
     depends_on:
       - auth-service
       - product-service

@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shopmate-redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shopmate-redis
+  template:
+    metadata:
+      labels:
+        app: shopmate-redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          ports:
+            - containerPort: 6379
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shopmate-redis
+spec:
+  ports:
+    - port: 6379
+  selector:
+    app: shopmate-redis

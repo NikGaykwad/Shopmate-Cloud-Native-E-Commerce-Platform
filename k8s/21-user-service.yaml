@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shopmate-user
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shopmate-user
+  template:
+    metadata:
+      labels:
+        app: shopmate-user
+    spec:
+      containers:
+        - name: user-service
+          image: shopmate-user:latest
+          imagePullPolicy: IfNotPresent
+          # For AWS ECR, update image URI
+          ports:
+            - containerPort: 8002
+          env:
+            - name: PORT
+              value: "8002"
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: shopmate-config
+                  key: DB_HOST
+            - name: DB_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: shopmate-config
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: shopmate-secrets
+                  key: DB_PASSWORD
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: shopmate-config
+                  key: DB_NAME
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shopmate-user
+spec:
+  ports:
+    - port: 8002
+      targetPort: 8002
+  selector:
+    app: shopmate-user

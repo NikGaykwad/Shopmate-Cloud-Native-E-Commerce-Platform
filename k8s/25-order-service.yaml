@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shopmate-order
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shopmate-order
+  template:
+    metadata:
+      labels:
+        app: shopmate-order
+    spec:
+      containers:
+        - name: order-service
+          image: shopmate-order:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8006
+          env:
+            - name: PORT
+              value: "8006"
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: shopmate-config
+                  key: DB_HOST
+            - name: DB_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: shopmate-config
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: shopmate-secrets
+                  key: DB_PASSWORD
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: shopmate-config
+                  key: DB_NAME
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shopmate-order
+spec:
+  ports:
+    - port: 8006
+      targetPort: 8006
+  selector:
+    app: shopmate-order

@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shopmate-auth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shopmate-auth
+  template:
+    metadata:
+      labels:
+        app: shopmate-auth
+    spec:
+      containers:
+        - name: auth-service
+          image: shopmate-auth:latest
+          imagePullPolicy: IfNotPresent # Important for local Kind clusters
+          # For AWS ECR, update image to your ECR URI (e.g., 123456789.dkr.ecr.us-east-1.amazonaws.com/shopmate-auth:latest)
+          ports:
+            - containerPort: 8001
+          env:
+            - name: PORT
+              value: "8001"
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: shopmate-config
+                  key: DB_HOST
+            - name: DB_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: shopmate-config
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: shopmate-secrets
+                  key: DB_PASSWORD
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: shopmate-config
+                  key: DB_NAME
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: shopmate-secrets
+                  key: JWT_SECRET
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shopmate-auth
+spec:
+  ports:
+    - port: 8001
+      targetPort: 8001
+  selector:
+    app: shopmate-auth

@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: shopmate-mongo
+spec:
+  serviceName: "shopmate-mongo"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shopmate-mongo
+  template:
+    metadata:
+      labels:
+        app: shopmate-mongo
+    spec:
+      containers:
+        - name: mongo
+          image: mongo:6.0
+          ports:
+            - containerPort: 27017
+          volumeMounts:
+            - name: mongo-storage
+              mountPath: /data/db
+  volumeClaimTemplates:
+    - metadata:
+        name: mongo-storage
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        # For AWS EBS volumes, uncomment and specify your storage class
+        # storageClassName: gp2
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shopmate-mongo
+spec:
+  ports:
+    - port: 27017
+  selector:
+    app: shopmate-mongo
+  clusterIP: None

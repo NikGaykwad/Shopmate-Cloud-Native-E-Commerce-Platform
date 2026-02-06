@@ -1,0 +1,36 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: shopmate-ingress
+  namespace: default
+  annotations:
+    # Standard Nginx Ingress
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    
+    # AWS ALB Ingress Controller Annotations (Uncomment for AWS ALB usage)
+    # kubernetes.io/ingress.class: alb
+    # alb.ingress.kubernetes.io/scheme: internet-facing
+    # alb.ingress.kubernetes.io/target-type: ip
+    # alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    # alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:123456789012:certificate/uuid
+spec:
+  # ingressClassName: nginx # Uncomment if using Nginx Ingress Controller
+  rules:
+    - http:
+        paths:
+          # Route for API Gateway
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: shopmate-gateway
+                port:
+                  number: 8000
+          # Route for Frontend (default)
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: shopmate-frontend
+                port:
+                  number: 5173

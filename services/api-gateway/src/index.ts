@@ -11,6 +11,12 @@ const PORT = process.env.PORT || 8000;
 app.use(cors());
 app.use(express.json());
 
+// Request logging middleware
+app.use((req, res, next) => {
+    console.log(`[Gateway] ${req.method} ${req.url}`);
+    next();
+});
+
 app.get('/health', (req, res) => {
     res.json({ status: 'UP', service: 'api-gateway' });
 });
@@ -97,6 +103,11 @@ app.use('/payments', authMiddleware, proxy(paymentUrl, {
         }
         return proxyReqOpts;
     }
+}));
+
+const searchUrl = process.env.SEARCH_SERVICE_URL || 'http://localhost:8004';
+app.use('/search', proxy(searchUrl, {
+    proxyReqPathResolver: (req) => '/search' + req.url
 }));
 
 

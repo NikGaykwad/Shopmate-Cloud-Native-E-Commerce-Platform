@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shopmate-search
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shopmate-search
+  template:
+    metadata:
+      labels:
+        app: shopmate-search
+    spec:
+      containers:
+        - name: search-service
+          image: shopmate-search:latest
+          imagePullPolicy: IfNotPresent
+          # For AWS ECR, update image URI
+          ports:
+            - containerPort: 8004
+          env:
+            - name: PORT
+              value: "8004"
+            - name: MONGO_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: shopmate-config
+                  key: MONGO_URI
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shopmate-search
+spec:
+  ports:
+    - port: 8004
+      targetPort: 8004
+  selector:
+    app: shopmate-search

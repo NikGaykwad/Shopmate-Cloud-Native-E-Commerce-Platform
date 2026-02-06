@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { ShoppingCart, Truck, ShieldCheck, ArrowLeft } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useCart } from '../context/CartContext';
 
 const API_URL = import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:8000';
@@ -37,11 +38,9 @@ const ProductDetails = () => {
             return;
         }
         setAddingToCart(true);
-        // Simulate network delay for better UX
         setTimeout(() => {
             addToCart(product);
             setAddingToCart(false);
-            // Optional: Show a toast or notification here
         }, 500);
     };
 
@@ -64,27 +63,42 @@ const ProductDetails = () => {
     if (!product) return <div className="text-center py-20">Product not found</div>;
 
     return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10"
+        >
             <button onClick={() => navigate(-1)} className="flex items-center text-gray-500 hover:text-black mb-8 transition-colors">
                 <ArrowLeft size={20} className="mr-2" /> Back
             </button>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20">
                 {/* Image Section */}
-                <div className="bg-gray-100 rounded-3xl overflow-hidden aspect-square relative shadow-inner">
+                <motion.div
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="bg-gray-100 rounded-3xl overflow-hidden aspect-square relative shadow-inner"
+                >
                     {product.images && product.images[0] ? (
                         <img
                             src={product.images[0]}
                             alt={product.name}
-                            className="w-full h-full object-contain p-8"
+                            className="w-full h-full object-contain p-8 hover:scale-105 transition-transform duration-500"
                         />
                     ) : (
                         <div className="flex items-center justify-center h-full text-gray-400">No Image</div>
                     )}
-                </div>
+                </motion.div>
 
                 {/* Info Section */}
-                <div className="flex flex-col justify-center">
+                <motion.div
+                    initial={{ x: 20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="flex flex-col justify-center"
+                >
                     <div className="mb-6">
                         <span className="text-indigo-600 font-bold tracking-wider text-sm uppercase">{product.category || 'Product'}</span>
                         <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mt-2 mb-4 leading-tight">{product.name}</h1>
@@ -97,20 +111,24 @@ const ProductDetails = () => {
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-4 mb-10">
-                        <button
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
                             onClick={handleAddToCart}
                             disabled={addingToCart}
-                            className="flex-1 bg-black text-white py-4 rounded-xl font-bold text-lg hover:bg-gray-800 transition-transform active:scale-[0.98] flex items-center justify-center space-x-2"
+                            className="flex-1 bg-black text-white py-4 rounded-xl font-bold text-lg hover:bg-gray-800 transition-colors flex items-center justify-center space-x-2 shadow-lg"
                         >
                             <ShoppingCart size={20} />
                             <span>{addingToCart ? 'Adding...' : 'Add to Cart'}</span>
-                        </button>
-                        <button
+                        </motion.button>
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
                             onClick={handleBuyNow}
-                            className="flex-1 bg-indigo-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-indigo-700 transition-transform active:scale-[0.98]"
+                            className="flex-1 bg-indigo-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
                         >
                             Buy Now
-                        </button>
+                        </motion.button>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 border-t border-gray-100 pt-8">
@@ -123,9 +141,9 @@ const ProductDetails = () => {
                             <span className="text-sm font-medium">2 Year Warranty</span>
                         </div>
                     </div>
-                </div>
+                </motion.div>
             </div>
-        </div>
+        </motion.div>
     );
 };
 

@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: shopmate-postgres
+spec:
+  serviceName: "shopmate-postgres"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shopmate-postgres
+  template:
+    metadata:
+      labels:
+        app: shopmate-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: shopmate-config
+                  key: DB_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: shopmate-secrets
+                  key: DB_PASSWORD
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: shopmate-config
+                  key: DB_NAME
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-storage
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        # For AWS EBS volumes, uncomment and specify your storage class
+        # storageClassName: gp2 
+        resources:
+          requests:
+            storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shopmate-postgres
+spec:
+  ports:
+    - port: 5432
+  selector:
+    app: shopmate-postgres
+  clusterIP: None # Headless service for StatefulSet

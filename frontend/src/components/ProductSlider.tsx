@@ -1,77 +1,100 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { ChevronRight } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ShoppingCart } from 'lucide-react';
+import { useCart } from '../context/CartContext';
 
 const API_URL = import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:8000';
 
 interface ProductSliderProps {
     title: string;
-    category: string;
-    bgColor?: string; // Optional background color for the section
+    category?: string;
+    bgColor?: string;
 }
 
-const ProductSlider: React.FC<ProductSliderProps> = ({ title, category, bgColor = 'bg-white' }) => {
+const ProductSlider: React.FC<ProductSliderProps> = ({ title, category }) => {
     const [products, setProducts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const { addToCart } = useCart();
 
     useEffect(() => {
         const fetchProducts = async () => {
             try {
-                // Fetch by category
-                const res = await axios.get(`${API_URL}/products?category=${category}`);
-                setProducts(res.data);
-            } catch (error) {
-                console.error(`Failed to fetch ${category}`, error);
+                let url = `${API_URL}/products`;
+                if (category) {
+                    url += `?category=${category}`;
+                }
+                const res = await axios.get(url);
+                // Simple logic to just show first 4 items for the slider
+                setProducts(res.data.slice(0, 4));
+            } catch (err) {
+                console.error("Failed to fetch products for slider", err);
             } finally {
                 setLoading(false);
             }
         };
+
         fetchProducts();
     }, [category]);
 
-    if (loading) return <div className="h-64 flex items-center justify-center"><div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin"></div></div>;
-    if (products.length === 0) return null; // Don't show empty sections
+    if (loading) return <div className="h-96 flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div></div>;
+    if (products.length === 0) return null;
 
     return (
-        <div className={`py-6 mb-4 ${bgColor} rounded-xl shadow-sm border border-gray-100`}>
-            <div className="flex justify-between items-center px-6 mb-4">
-                <h2 className="text-xl md:text-2xl font-bold text-gray-900">{title}</h2>
-                <Link to={`/category/${category}`} className="bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 transition-colors shadow-lg shadow-blue-200">
-                    <ChevronRight size={20} />
+        <section className="py-8">
+            <div className="flex justify-between items-end mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+                <Link to={`/category/${category || 'all'}`} className="text-sm font-semibold text-gray-500 hover:text-black transition-colors">
+                    View All &rarr;
                 </Link>
             </div>
 
-            <div className="flex overflow-x-auto pb-6 px-6 gap-4 snap-x hide-scrollbar scroll-smooth">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {products.map((product) => (
-                    <Link
-                        to={`/product/${product._id || product.id}`}
-                        key={product._id || product.id}
-                        className="min-w-[200px] md:min-w-[240px] snap-start bg-white rounded-xl border border-gray-100 p-3 hover:shadow-xl transition-all duration-300 group flex flex-col justify-between"
+                    <motion.div
+                        key={product._id}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        whileHover={{ y: -5 }}
+                        transition={{ duration: 0.3 }}
+                        className="group relative bg-white rounded-2xl p-4 border border-gray-100 hover:shadow-xl transition-all duration-300"
                     >
-                        <div className="h-40 w-full mb-4 bg-gray-50 rounded-lg overflow-hidden flex items-center justify-center relative">
-                            {product.images?.[0] ? (
-                                <img
-                                    src={product.images[0]}
-                                    alt={product.name}
-                                    className="w-full h-full object-contain p-2 group-hover:scale-110 transition-transform duration-500"
-                                />
-                            ) : (
-                                <span className="text-gray-400 text-xs">No Image</span>
-                            )}
-                        </div>
+                        <Link to={`/product/${product._id}`} className="block">
+                            <div className="aspect-square rounded-xl bg-gray-50 mb-4 overflow-hidden relative">
+                                {product.images && product.images[0] ? (
+                                    <img
+                                        src={product.images[0]}
+                                        alt={product.name}
+                                        className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-300"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-gray-300 text-sm">No Image</div>
+                                )}
 
-                        <div>
-                            <h3 className="font-medium text-gray-900 line-clamp-2 text-sm mb-1 group-hover:text-blue-600 transition-colors">{product.name}</h3>
-                            <div className="flex items-center space-x-2">
-                                <span className="font-bold text-gray-900">₹{product.price.toLocaleString()}</span>
-                                <span className="text-xs text-green-600 font-medium">Free Delivery</span>
                             </div>
-                        </div>
-                    </Link>
+
+                            <h3 className="font-bold text-gray-900 mb-1 truncate">{product.name}</h3>
+                            <div className="flex justify-between items-center mt-2">
+                                <span className="font-bold text-lg">₹{product.price.toLocaleString()}</span>
+                            </div>
+                        </Link>
+
+                        <motion.button
+                            whileTap={{ scale: 0.95 }}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                addToCart(product);
+                            }}
+                            className="w-full mt-3 bg-gray-900 text-white py-2.5 rounded-lg font-bold text-sm hover:bg-black transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300"
+                        >
+                            <ShoppingCart size={16} /> Add to Cart
+                        </motion.button>
+                    </motion.div>
                 ))}
             </div>
-        </div>
+        </section>
     );
 };
 

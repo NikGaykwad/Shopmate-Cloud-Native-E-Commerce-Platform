@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: shopmate-config
+  namespace: default
+data:
+  # Database Configuration
+  # For AWS RDS, update HOST to your RDS endpoint (e.g., shopmate-db.cx123.us-east-1.rds.amazonaws.com)
+  DB_HOST: "shopmate-postgres" 
+  DB_PORT: "5432"
+  DB_USER: "shopmate_user"
+  DB_NAME: "shopmate_db"
+  
+  # For MongoDB Atlas, provide the full connection string here
+  MONGO_URI: "mongodb://shopmate-mongo:27017/shopmate_products"
+  
+  # For AWS ElastiCache, update URL (e.g., redis://shopmate-cache.cx123.cache.amazonaws.com:6379)
+  REDIS_URL: "redis://shopmate-redis:6379"
+
+  # Internal Service URLs (Cluster DNS)
+  AUTH_SERVICE_URL: "http://shopmate-auth:8001"
+  USER_SERVICE_URL: "http://shopmate-user:8002"
+  PRODUCT_SERVICE_URL: "http://shopmate-product:8003"
+  SEARCH_SERVICE_URL: "http://shopmate-search:8004"
+  CART_SERVICE_URL: "http://shopmate-cart:8005"
+  ORDER_SERVICE_URL: "http://shopmate-order:8006"
+  PAYMENT_SERVICE_URL: "http://shopmate-payment:8007"
+  NOTIFICATION_SERVICE_URL: "http://shopmate-notification:8008"
+  VITE_API_GATEWAY_URL: "http://shopmate-gateway:8000"

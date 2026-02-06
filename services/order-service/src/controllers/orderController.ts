@@ -56,14 +56,35 @@ export const createOrder = async (req: Request, res: Response) => {
             }
         }
 
-        // 4. Create Order with Address and Payment Info
+        // 4. Generate Order Details
+        const orderNumber = `SM-ORD-2026-${Math.floor(10000 + Math.random() * 90000)}`;
+
+        // Delivery Date: 3 to 7 days from now
+        const deliveryDate = new Date();
+        const daysToAdd = Math.floor(Math.random() * 5) + 3; // 3 to 7
+        deliveryDate.setDate(deliveryDate.getDate() + daysToAdd);
+
+        // Delivery Time: 9 AM to 9 PM
+        const deliveryHour = Math.floor(Math.random() * (21 - 9 + 1)) + 9;
+        const deliveryTime = `${deliveryHour > 12 ? deliveryHour - 12 : deliveryHour}:00 ${deliveryHour >= 12 ? 'PM' : 'AM'}`;
+
+        // 5. Create Order with Address, Payment Info, and New Fields
         const orderResult = await query(
-            'INSERT INTO orders (user_id, total_amount, status, shipping_address, payment_info) VALUES ($1, $2, $3, $4, $5) RETURNING id',
-            [userId, totalAmount, 'placed', JSON.stringify(shippingAddress), JSON.stringify(paymentInfo)]
+            'INSERT INTO orders (user_id, total_amount, status, shipping_address, payment_info, order_number, estimated_delivery_date, estimated_delivery_time) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id',
+            [
+                userId,
+                totalAmount,
+                'placed',
+                JSON.stringify(shippingAddress),
+                JSON.stringify(paymentInfo),
+                orderNumber,
+                deliveryDate,
+                deliveryTime
+            ]
         );
         const orderId = orderResult.rows[0].id;
 
-        // 5. Create Order Items
+        // 6. Create Order Items
         for (const item of processedItems) {
             await query(
                 'INSERT INTO order_items (order_id, product_id, quantity, price_at_purchase) VALUES ($1, $2, $3, $4)',
@@ -72,7 +93,16 @@ export const createOrder = async (req: Request, res: Response) => {
         }
 
         await query('COMMIT');
-        res.status(201).json({ message: 'Order placed successfully', orderId });
+
+        // 7. SMS Simulation Log
+        console.log(`[SMS GATEWAY] Sending to User ${userId}: Your Shopmate order ${orderNumber} is confirmed. Expected delivery on ${deliveryDate.toDateString()} by ${deliveryTime}. Track at https://www.shopmate.com/orders/${orderNumber}`);
+
+        res.status(201).json({
+            message: 'Order placed successfully',
+            orderId,
+            orderNumber,
+            estimatedDelivery: `${deliveryDate.toDateString()} by ${deliveryTime}`
+        });
 
     } catch (error: any) {
         await query('ROLLBACK');

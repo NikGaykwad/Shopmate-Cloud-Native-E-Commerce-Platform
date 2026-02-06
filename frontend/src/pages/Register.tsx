@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 const API_URL = import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:8000';
 
@@ -44,9 +45,6 @@ const Register = () => {
 
         setLoading(true);
         try {
-            // Note: API Gateway might need the path without /auth prefix depending on proxy config? 
-            // Based on index.ts in API gateway: app.use('/auth', proxy(...))
-            // This means we hit localhost:8000/auth/signup
             await axios.post(`${API_URL}/auth/signup`, {
                 fullName: formData.full_name, // Backend expects fullName
                 email: formData.email,
@@ -63,10 +61,13 @@ const Register = () => {
 
     const [showPassword, setShowPassword] = useState(false);
 
-    // ... (handleChange and validatePassword remain same) ...
-
     return (
-        <div className="flex justify-center items-center h-[80vh]">
+        <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4 }}
+            className="flex justify-center items-center h-[80vh]"
+        >
             <div className="bg-white p-10 rounded-2xl shadow-2xl w-full max-w-md border border-gray-100">
                 <div className="text-center mb-8">
                     <h2 className="text-3xl font-bold text-gray-900">Create Account</h2>
@@ -128,13 +129,15 @@ const Register = () => {
                         />
                     </div>
 
-                    <button
+                    <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-black text-white py-3.5 rounded-xl font-bold text-lg hover:bg-gray-800 transition-transform active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+                        className="w-full bg-black text-white py-3.5 rounded-xl font-bold text-lg hover:bg-gray-800 transition-colors shadow-lg active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
                     >
                         {loading ? 'Creating Account...' : 'Sign Up'}
-                    </button>
+                    </motion.button>
                 </form>
 
                 <div className="mt-8 text-center text-sm text-gray-600">
@@ -142,7 +145,7 @@ const Register = () => {
                     <Link to="/login" className="font-bold text-black hover:underline ml-1">Log In</Link>
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 };
 

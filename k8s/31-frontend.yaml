@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shopmate-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shopmate-frontend
+  template:
+    metadata:
+      labels:
+        app: shopmate-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: shopmate-frontend:latest
+          imagePullPolicy: IfNotPresent
+          # For AWS ECR, update to your ECR URI
+          ports:
+            - containerPort: 5173
+          env:
+            - name: VITE_API_GATEWAY_URL
+              # NOTE: In production (AWS), this should be the public URL of your Ingress/LoadBalancer
+              # e.g., https://api.shopmate.com
+              valueFrom:
+                configMapKeyRef:
+                  name: shopmate-config
+                  key: VITE_API_GATEWAY_URL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shopmate-frontend
+spec:
+  ports:
+    - port: 5173
+      targetPort: 5173
+  selector:
+    app: shopmate-frontend

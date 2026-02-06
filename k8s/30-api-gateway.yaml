@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shopmate-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shopmate-gateway
+  template:
+    metadata:
+      labels:
+        app: shopmate-gateway
+    spec:
+      containers:
+        - name: api-gateway
+          image: shopmate-gateway:latest
+          imagePullPolicy: IfNotPresent
+          # For AWS ECR, update image URI
+          ports:
+            - containerPort: 8000
+          env:
+            - name: PORT
+              value: "8000"
+            - name: AUTH_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: shopmate-config
+                  key: AUTH_SERVICE_URL
+            - name: PRODUCT_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: shopmate-config
+                  key: PRODUCT_SERVICE_URL
+            - name: CART_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: shopmate-config
+                  key: CART_SERVICE_URL
+            - name: ORDER_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: shopmate-config
+                  key: ORDER_SERVICE_URL
+            - name: PAYMENT_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: shopmate-config
+                  key: PAYMENT_SERVICE_URL
+            - name: SEARCH_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: shopmate-config
+                  key: SEARCH_SERVICE_URL
+            - name: USER_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: shopmate-config
+                  key: USER_SERVICE_URL
+            - name: NOTIFICATION_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: shopmate-config
+                  key: NOTIFICATION_SERVICE_URL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shopmate-gateway
+spec:
+  # For AWS LoadBalancer only on Gateway: 
+  # type: LoadBalancer
+  # annotations:
+  #   service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+  ports:
+    - port: 8000
+      targetPort: 8000
+  selector:
+    app: shopmate-gateway
